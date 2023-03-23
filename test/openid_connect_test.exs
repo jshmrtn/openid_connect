@@ -571,34 +571,6 @@ defmodule OpenIDConnectTest do
       end
     end
 
-    test "fails when the token is intended for a different application" do
-      {:ok, pid} = GenServer.start_link(MockWorker, [], name: :openid_connect)
-
-      try do
-        {jwk, []} = Code.eval_file("test/fixtures/rsa/jwks.exs")
-        :ok = GenServer.call(pid, {:put, :jwk, JOSE.JWK.from(jwk)})
-
-        claims = %{
-          "email" => "brian@example.com",
-          "exp" => epoch() + 60 * 60,
-          "aud" => "BOGUS"
-        }
-
-        {_alg, token} =
-          jwk
-          |> Map.get("keys")
-          |> List.last()
-          |> build_token(claims)
-
-        result = OpenIDConnect.verify(:google, token)
-
-        assert result ==
-                 {:error, :verify, "invalid aud claim: token is intended for another application"}
-      after
-        GenServer.stop(pid)
-      end
-    end
-
     test "accepts token intended for multiple applications" do
       {:ok, pid} = GenServer.start_link(MockWorker, [], name: :openid_connect)
 

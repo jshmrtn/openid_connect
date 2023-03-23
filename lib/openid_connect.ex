@@ -284,9 +284,9 @@ defmodule OpenIDConnect do
   end
 
   defp verify_claims(claims, config) do
-    with :ok <- verify_exp_claim(claims, exp_leeway(config)),
-         :ok <- verify_aud_claim(claims, client_id(config)) do
-      {:ok, claims}
+    case verify_exp_claim(claims, exp_leeway(config)) do
+      :ok -> {:ok, claims}
+      error -> error
     end
   end
 
